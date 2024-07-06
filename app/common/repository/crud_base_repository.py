@@ -11,21 +11,21 @@ class CRUDBase:
         async with async_session_maker() as session:
             query = select(cls.model.__table__.columns).filter(cls.model.id == model_id)
             result = await session.execute(query)
-            return result.scalars().one_or_none()
+            return result.one_or_none()
     
     @classmethod
     async def get_one_or_none(cls, **filters) -> ModelType | None:
         async with async_session_maker() as session:
             query = select(cls.model.__table__.columns).filter_by(**filters)
             result = await session.execute(query)
-            return result.scalars().one_or_none()
+            return result.one_or_none()
     
     @classmethod
     async def get_all(cls, **filters) -> list[ModelType] | None:
         async with async_session_maker() as session:
             query = select(cls.model.__table__.columns).filter_by(**filters)
             result = await session.execute(query)
-            return result.scalars().all()
+            return result.all()
         
     @classmethod
     async def add(cls, **data):

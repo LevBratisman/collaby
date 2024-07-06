@@ -2,10 +2,12 @@ from aiogram import Bot, Dispatcher
 import logging
 import asyncio
 
+from app.bot.data.uni_data import set_uni_data
+
 from app.core.config import settings
 
 # routers import
-from app.bot.handlers.start import  start_router
+from app.bot.handlers.start import start_router
 
 
 # Initialize Bot and Dispatcher
@@ -18,6 +20,7 @@ dp.include_router(start_router)
 
 
 async def main():
+    await set_uni_data()
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     

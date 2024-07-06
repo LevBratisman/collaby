@@ -12,4 +12,4 @@ class UserRepository(CRUDBase):
         async with async_session_maker() as session:
             query = select(cls.model.__table__.columns).filter(cls.model.telegram_id == telegram_id)
             result = await session.execute(query)
-            return result.scalars().one_or_none()
+            return result.one_or_none()

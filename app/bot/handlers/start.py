@@ -5,11 +5,15 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 from app.common.repository.user_repository import UserRepository
+from app.common.repository.uni_repository import UniRepository
+from app.bot.keyboards.reply.menu import get_menu_keyboard
+from app.bot.keyboards.inline.base import get_callback_btns
+from app.bot.keyboards.inline.uni import get_uni_btns
 
 start_router = Router()
 
 class Start(StatesGroup):
-    user_id = State()
+    telegram_id = State()
     username = State()
     uni_id = State()
 
@@ -30,24 +34,27 @@ async def start(
     if user:
         if user.username != message.from_user.username:
             await UserRepository.update(model_id=user.id, username=message.from_user.username)
-        await message.answer("Добро пожаловать в Collaby!")
+        await message.answer("Добро пожаловать в Collaby!", reply_markup=await get_menu_keyboard(telegram_id=message.from_user.id))
         return
            
     await state.set_state(Start.uni_id)
     await state.update_data(username=message.from_user.username)
-    await state.update_data(user_id=message.from_user.id)
+    await state.update_data(telegram_id=message.from_user.id)
     
-    await message.answer("С какого вы университета?")
+    await message.answer("С какого вы университета?", reply_markup=await get_uni_btns())
     
     
-@start_router.callback_query(StateFilter(Start.uni_id), F.text.startswith("uni_"))
+@start_router.callback_query(StateFilter(Start.uni_id), F.data)
 async def set_uni(
     callback: CallbackQuery, 
     state: FSMContext
 ):
-    await state.update_data(uni_id=int(callback.data.split("_")[1]))
-    
+    uni = await UniRepository.get_one_or_none(short_name=callback.data)
+    await state.update_data(uni_id=uni.id)
+        
     user_data = await state.get_data()
-    await UserRepository.add(**user_data)
     
-    await callback.message.answer("Добро пожаловать в Collaby!")
+    await UserRepository.add(**user_data)
+    await callback.message.edit_text("Отлично!")
+    
+    await callback.message.answer("Добро пожаловать в Collaby!", reply_markup=await get_menu_keyboard(telegram_id=callback.from_user.id))

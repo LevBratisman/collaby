@@ -1,4 +1,4 @@
-from aiogram.types import ReplyKeyboardMarkup
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 from app.common.repository.user_repository import UserRepository
@@ -12,7 +12,7 @@ async def get_menu_keyboard(
     placeholder: str = "Выберите действие",
     request_contact: int = None,
     request_location: int = None,
-    sizes: tuple[int] = (2, 2, 2, 1,),
+    sizes: tuple[int] = (2, 2, 2, 1, 1,),
     telegram_id: int = None
 ) -> ReplyKeyboardMarkup:
     
@@ -24,28 +24,27 @@ async def get_menu_keyboard(
         "🎴Мой профиль",
         "👥Мои проекты",
         "⚙️Параметры поиска",
+        "💎Premium"
     )
     
     keyboard = ReplyKeyboardBuilder()
     
     user = await UserRepository.get_by_telegram_id(telegram_id=telegram_id)
-    requests_invites_info = await get_invites_requests_info(telegram_id=telegram_id)
+    requests_invites_info = await get_invites_requests_info(user=user)
     
     for index, text in enumerate(btns, start=0):
-        
-        if request_contact is not None and index == request_contact:
-            keyboard.add(KeyboardButton(text=text, request_contact=True))
-            
-        elif request_location is not None and index == request_location:
-            keyboard.add(KeyboardButton(text=text, request_location=True))
-            
-        else:
-            if index == 2 and requests:
-                keyboard.add(KeyboardButton(text=text + f" ({len(requests)})"))
-            elif index == 3 and invites:
-                keyboard.add(KeyboardButton(text=text + f" ({len(invites)})"))
+        if index == 2:
+            if requests_invites_info['requests'] > 0:
+                keyboard.add(KeyboardButton(text=f"{text} ({requests_invites_info['requests']})"))
             else:
                 keyboard.add(KeyboardButton(text=text))
+        elif index == 3:
+            if requests_invites_info['invites'] > 0:
+                keyboard.add(KeyboardButton(text=f"{text} ({requests_invites_info['invites']})"))
+            else:
+                keyboard.add(KeyboardButton(text=text))
+        else:
+            keyboard.add(KeyboardButton(text=text))
 
     return keyboard.adjust(*sizes).as_markup(
         resize_keyboard=True,
@@ -61,6 +60,11 @@ async def get_invites_requests_info(user: User) -> dict:
     }
     
     invites = await InviteRepository.get_all(user_id=user.id)
-    # requests = await RequestRepository.get_all(project_id=Request.project.user_iadapt_to_entity)
+    requests = await RequestRepository.get_request_project_info(user_id=user.id)
+    
+    info["requests"] = len(requests)
+    info["invites"] = len(invites)
+    
+    return info
     
     
