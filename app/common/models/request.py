@@ -12,3 +12,4 @@ class Request(Base, CreatedModel):
     message: Mapped[str] = mapped_column(String(500), nullable=True)
     
     user = relationship("User", foreign_keys=[user_id])
+    project = relationship("Project", foreign_keys=[project_id])

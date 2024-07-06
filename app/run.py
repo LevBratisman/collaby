@@ -4,10 +4,17 @@ import asyncio
 
 from app.core.config import settings
 
+# routers import
+from app.bot.handlers.start import  start_router
+
 
 # Initialize Bot and Dispatcher
 bot = Bot(token=settings.BOT_TOKEN)
 dp = Dispatcher()
+
+
+# Connect handlers
+dp.include_router(start_router)
 
 
 async def main():

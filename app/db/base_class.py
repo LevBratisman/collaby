@@ -2,6 +2,8 @@ from sqlalchemy import Column, DateTime, Integer
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.orm import declarative_mixin
 from sqlalchemy.sql import func
+from typing import TypeVar
+
 
 @as_declarative()
 class Base:
@@ -30,3 +32,6 @@ class UpdatedModel:
     """
 
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    
+ModelType = TypeVar("ModelType", bound=Base)
