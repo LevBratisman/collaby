@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 
 # Создание инлайн кнопок
-def get_callback_btns(
+async def get_callback_btns(
     *,
     btns: dict[str, str],
     sizes: tuple[int] = (2,)
@@ -18,7 +18,7 @@ def get_callback_btns(
 
 
 # Создание инлайн кнопок c url
-def get_url_btns(
+async def get_url_btns(
     *,
     btns: dict[str, str],
     sizes: tuple[int] = (2,)
@@ -33,7 +33,7 @@ def get_url_btns(
 
 
 # Cоздание инлайн кнопок c url и callback
-def get_inline_mix_btns(
+async def get_inline_mix_btns(
     *,
     btns: dict[str, str],
     sizes: tuple[int] = (2,)

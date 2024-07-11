@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 
 # Создание reply кнопок
-def get_keyboard(
+async def get_keyboard(
     *btns: str,
     placeholder: str = None,
     request_contact: int = None,

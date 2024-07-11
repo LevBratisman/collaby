@@ -12,6 +12,7 @@ class User(Base, CreatedModel, UpdatedModel):
     name: Mapped[str] = mapped_column(String(30), nullable=True)
     info: Mapped[str] = mapped_column(String(700), nullable=True)
     skills: Mapped[str] = mapped_column(String(700), nullable=True)
+    image: Mapped[str] = mapped_column(nullable=True)
     topic: Mapped[str] = mapped_column(String(30), index=True, nullable=True)
     uni_id: Mapped[int] = mapped_column(ForeignKey("uni.id"))
     claim_count: Mapped[int] = mapped_column(default=0)
