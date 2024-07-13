@@ -24,5 +24,5 @@ class User(Base, CreatedModel, UpdatedModel):
     person_iter: Mapped[int] = mapped_column(default=0)
     project_iter: Mapped[int] = mapped_column(default=0)
     
-    uni = relationship("Uni", backref="users")
+    uni: Mapped["Uni"] = relationship(back_populates="users")
     

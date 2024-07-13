@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InputMediaPhoto
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -22,16 +22,24 @@ class CreateProfile(StatesGroup):
     is_authorized = State()
 
 
-@create_profile_router.message(F.text == "Заполнить анкету🚀")
+
+@create_profile_router.message(StateFilter(None), F.text == "Заполнить анкету🚀")
 async def fill_profile(message: Message, state: FSMContext):
     await state.set_state(CreateProfile.name)
     
     await message.answer("Как вас зовут?", reply_markup=await get_keyboard("Отмена"))
     
+@create_profile_router.callback_query(StateFilter(None), F.data.contains("refill_profile"))
+async def refill_profile(callback: CallbackQuery, state: FSMContext):
+    await state.set_state(CreateProfile.name)
+    await callback.answer('Заполнение анкеты')
+    
+    await callback.message.answer("Как вас зовут?", reply_markup=await get_keyboard("Отмена"))
+    
     
 @create_profile_router.message(StateFilter(CreateProfile), F.text == "Отмена")
 async def reject(message: Message, state: FSMContext):
-    state.clear()
+    await state.clear()
     await my_profile(message)
     
     
@@ -47,6 +55,7 @@ async def set_name(message: Message, state: FSMContext):
 async def set_topic(callback: CallbackQuery, state: FSMContext):
     await state.update_data(topic=callback.data)
     await state.set_state(CreateProfile.info)
+    await callback.answer(callback.data)
     
     await callback.message.edit_text("Напишите немного о себе")
     
@@ -78,6 +87,9 @@ async def set_image(message: Message, state: FSMContext):
     await UserRepository.update(model_id=user.id, **user_data)
     
     await message.answer("Вы успешно заполнили анкету", reply_markup=await get_menu_keyboard(telegram_id=message.from_user.id))
+    
+    await state.clear()
+    await my_profile(message)
     
     
     
