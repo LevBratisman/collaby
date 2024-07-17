@@ -41,9 +41,9 @@ class UserRepository(CRUDBase):
     @classmethod
     async def get_users_by_filter(cls, user_id: int, **filter_data) -> list[User]:
         async with async_session_maker() as session:
-            query = select(cls.model)
+            query = select(cls.model).where(cls.model.id != user_id).filter_by(**filter_data)
             result = await session.execute(query)
-            return result.all()
+            return result.scalars().all()
         
         
     # ITERATORS

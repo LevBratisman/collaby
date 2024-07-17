@@ -12,4 +12,4 @@ class ProjectRepository(CRUDBase):
         async with async_session_maker() as session:
             query = select(cls.model).filter_by(**filter_data).where(cls.model.user_id != user_id)
             result = await session.execute(query)
-            return result.all()
+            return result.scalars().all()

@@ -91,7 +91,7 @@ def get_request_btns(
 ):
     keyboard = InlineKeyboardBuilder()
 
-    keyboard.add(InlineKeyboardButton(text='Отклонить',
+    keyboard.add(InlineKeyboardButton(text='Удалить',
                 callback_data=RequestCallBack(request_id=request_id, page=page, action="delete").pack()))
 
     for text, action in pagination_btns.items():

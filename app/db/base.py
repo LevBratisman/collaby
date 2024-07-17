@@ -10,4 +10,5 @@ from app.common.models.filter import Filter
 from app.common.models.banned_user import BannedUser
 from app.common.models.banned_project import BannedProject
 from app.common.models.premium import Premium
+from app.common.models.report import Report
 from app.db.base_class import Base

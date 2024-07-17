@@ -16,6 +16,8 @@ from app.bot.handlers.project.base import base_project_router
 from app.bot.handlers.project.create import create_project_router
 from app.bot.handlers.search.project import search_project_router
 from app.bot.handlers.search.profile import search_profile_router
+from app.bot.handlers.invites import base_invite_router
+from app.bot.handlers.requests import base_request_router
 
 
 # Initialize Bot and Dispatcher
@@ -32,6 +34,8 @@ dp.include_router(base_project_router)
 dp.include_router(create_project_router)
 dp.include_router(search_project_router)
 dp.include_router(search_profile_router)
+dp.include_router(base_invite_router)
+dp.include_router(base_request_router)
 dp.include_router(base_router)
 
 
