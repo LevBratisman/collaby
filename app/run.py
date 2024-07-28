@@ -1,4 +1,5 @@
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 import logging
 import asyncio
 
@@ -17,11 +18,15 @@ from app.bot.handlers.project.create import create_project_router
 from app.bot.handlers.search.project import search_project_router
 from app.bot.handlers.search.profile import search_profile_router
 from app.bot.handlers.invites import base_invite_router
+from app.bot.handlers.admin.base import base_admin_router
+from app.bot.handlers.search_settings.base import base_search_settings_router
 from app.bot.handlers.requests import base_request_router
+from app.bot.handlers.search_settings.profile import base_search_settings_profile_router
+from app.bot.handlers.search_settings.project import base_search_settings_project_router
 
 
 # Initialize Bot and Dispatcher
-bot = Bot(token=settings.BOT_TOKEN)
+bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode="HTML"))
 dp = Dispatcher()
 
 
@@ -36,6 +41,11 @@ dp.include_router(search_project_router)
 dp.include_router(search_profile_router)
 dp.include_router(base_invite_router)
 dp.include_router(base_request_router)
+dp.include_router(base_search_settings_router)
+dp.include_router(base_search_settings_profile_router)
+dp.include_router(base_search_settings_project_router)
+dp.include_router(base_admin_router)
+
 dp.include_router(base_router)
 
 
