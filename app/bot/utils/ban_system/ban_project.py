@@ -1,21 +1,20 @@
-from datetime import datetime
+import datetime
 
-from app.common.repository.project_repository import ProjectRepository
-from app.common.repository.banned_project_repository import BannedProjectRepository
+from app.common.repository.report_repository import ReportRepository
+from app.common.repository.user_repository import UserRepository
 
 from app.common.models.project import Project
-from app.common.models.user import User
+
+from app.bot.utils.ban_system.ban_profile import ban_profile
 
 
-async def ban_project(project: Project, user: User):
-    await ProjectRepository().update(model_id=project.id, is_banned=True)
+async def ban_project(project: Project):
     
-    term_days = 10
-    date_end = datetime.now() + datetime.timedelta(days=term_days)
+    await ReportRepository.delete_by(project_id=project.id, to_project=True)
+    user = await UserRepository.get_by_id(model_id=project.user_id)
     
-    await BannedProjectRepository().add(project_id=project.id, user_id=user.id, term=term_days, date_end=date_end)
+    await UserRepository.update(model_id=project.user_id, claim_count=user.claim_count + 1)
     
+    if user.claim_count == 4:
+        await ban_profile(user)
     
-async def unban_project(project: Project):
-    await ProjectRepository().update(model_id=project.id, is_banned=False)
-    await BannedProjectRepository().delete(project_id=project.id)

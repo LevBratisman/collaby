@@ -5,11 +5,13 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 import asyncio
+import datetime
 
 from app.common.repository.filter_repository import FilterRepository
 from app.common.repository.user_repository import UserRepository
 from app.common.repository.project_repository import ProjectRepository
 from app.common.repository.request_repository import RequestRepository
+from app.common.repository.banned_user_repository import BannedUserRepository
 from app.common.repository.report_repository import ReportRepository
 from app.bot.keyboards.inline.report import ReportCallBack
 from app.bot.utils.search import transform_filter_for_search_projects
@@ -17,6 +19,8 @@ from app.bot.keyboards.reply.base import get_keyboard
 from app.bot.keyboards.inline.base import get_callback_btns
 from app.bot.keyboards.inline.report import get_report_reasons_for_project
 from app.bot.keyboards.inline.card import get_project_search_btns
+from app.bot.utils.ban_system.ban_project import ban_project
+from app.bot.utils.ban_system.ban_profile import unban_profile
 from app.bot.utils.card_generator import get_project_card
 
 class RequestProject(StatesGroup):
@@ -33,10 +37,15 @@ async def start_search_project(message: Message):
         user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
         user_filter = await FilterRepository.get_filter_by_telegram_id(telegram_id=message.from_user.id)
         
+        if user.is_banned:
+            banned_user = await BannedUserRepository.get_one_or_none(user_id=user.id)
+            if banned_user.date_end < datetime.datetime.now(tz=datetime.timezone.utc):
+                await unban_profile(user)
+        
         if user_filter:
             user_filter = await transform_filter_for_search_projects(user_filter)            
         
-        target_projects = await ProjectRepository.get_projects_by_filter(user_id=message.from_user.id, **user_filter)
+        target_projects = await ProjectRepository.get_projects_by_filter(user_id=user.id, **user_filter)
         
         if target_projects:
             iter = user.project_iter
@@ -62,6 +71,11 @@ async def start_search_project(message: Message):
 async def invite_user(callback: CallbackQuery, bot: Bot):
     target_project_id = int(callback.data.split('_')[-1])
     target_project = await ProjectRepository.get_by_id(model_id=target_project_id)
+    
+    if not target_project:
+        await callback.answer("Проект был удален")
+        return
+        
     sender_user = await UserRepository.get_by_telegram_id(telegram_id=callback.from_user.id)
     
     if not sender_user.is_banned:
@@ -87,7 +101,7 @@ async def invite_user(callback: CallbackQuery, bot: Bot):
         else:
             await callback.answer("Пожалуйста, заполните анкету")
     else:
-        await callback.answer("Ваш профиль заблокирован")
+        await callback.answer("Вы были забанены")
         
         
 # --------------------------------------- REPORT PROJECT ---------------------------------------
@@ -97,6 +111,11 @@ async def invite_user(callback: CallbackQuery, bot: Bot):
 async def invite_user(callback: CallbackQuery, state: FSMContext):
     target_project_id = int(callback.data.split('_')[-1])
     target_project = await ProjectRepository.get_by_id(model_id=target_project_id)
+    
+    if not target_project:
+        await callback.answer("Проект был удален")
+        return
+    
     reporter = await UserRepository.get_by_telegram_id(telegram_id=callback.from_user.id)
     
     if not reporter.is_banned:
@@ -119,7 +138,7 @@ async def invite_user(callback: CallbackQuery, state: FSMContext):
         
         
 @search_project_router.callback_query(StateFilter(ReportProject.reason), ReportCallBack.filter())
-async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, state: FSMContext):
+async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, state: FSMContext, bot: Bot):
     
     if callback_data.action == "report":
         report_data = {
@@ -132,10 +151,20 @@ async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, st
         await ReportRepository.add(**report_data)
         await callback.answer("Жалоба отправлена")
         
+    project = await ProjectRepository.get_by_id(model_id=callback_data.target_id)
+    await ProjectRepository.update(model_id=project.id, claim_count=project.claim_count + 1)
+    user = await UserRepository.get_by_id(model_id=project.user_id)
+        
     project_description = await get_project_card(callback_data.target_id)
             
     project_description_media = InputMediaPhoto(media=project_description['photo'], caption=project_description['description'])
     await callback.message.edit_media(project_description_media, reply_markup=await get_project_search_btns(callback_data.target_id))
     if callback_data.action == "cancel":
         await callback.answer()
+        
+    if project.claim_count == 4:
+        await ban_project(project)
+        await bot.send_message(user.telegram_id, f"Ваш проект {project.name} был забанен. Причина: {callback_data.reason}")
+        await ProjectRepository.delete(model_id=project.id)
+    
     await state.clear()

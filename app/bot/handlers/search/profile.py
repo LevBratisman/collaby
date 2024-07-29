@@ -6,11 +6,14 @@ from aiogram.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
 import asyncio
 
+import datetime
+
 from app.common.repository.filter_repository import FilterRepository
 from app.common.repository.user_repository import UserRepository
 from app.common.repository.project_repository import ProjectRepository
 from app.common.repository.report_repository import ReportRepository
 from app.common.repository.invite_repository import InviteRepository
+from app.common.repository.banned_user_repository import BannedUserRepository
 from app.bot.keyboards.inline.project import InviteUserCallBack
 from app.bot.keyboards.inline.report import ReportCallBack
 from app.bot.utils.search import transform_filter_for_search_people
@@ -20,6 +23,8 @@ from app.bot.keyboards.inline.report import get_report_reasons_for_user
 from app.bot.keyboards.inline.project import get_projects
 from app.bot.keyboards.inline.card import get_profile_search_btns
 from app.bot.utils.card_generator import get_profile_card
+
+from app.bot.utils.ban_system.ban_profile import ban_profile, unban_profile
 
 
 class InviteProfile(StatesGroup):
@@ -35,6 +40,12 @@ search_profile_router = Router()
 async def start_search_profile(message: Message):
             
         user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
+        
+        if user.is_banned:
+            banned_user = await BannedUserRepository.get_one_or_none(user_id=user.id)
+            if banned_user.date_end < datetime.datetime.now(tz=datetime.timezone.utc):
+                await unban_profile(user)
+        
         user_filter = await FilterRepository.get_filter_by_telegram_id(telegram_id=message.from_user.id)
         
         if user_filter:
@@ -68,6 +79,10 @@ async def invite_user(callback: CallbackQuery, state: FSMContext):
     target_user_id = int(callback.data.split('_')[-1])
     target_user = await UserRepository.get_by_id(model_id=target_user_id)
     inviter = await UserRepository.get_by_telegram_id(telegram_id=callback.from_user.id)
+    
+    if inviter.is_banned:
+        await callback.answer("Вы были забанены")
+        return
     
     if target_user.is_authorized and not target_user.is_banned:
         existed_projects = await ProjectRepository.get_all(user_id=inviter.id)
@@ -142,7 +157,7 @@ async def invite_user(callback: CallbackQuery, state: FSMContext):
         
         
 @search_profile_router.callback_query(StateFilter(ReportProfile.reason), ReportCallBack.filter())
-async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, state: FSMContext):
+async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, state: FSMContext, bot: Bot):
     
     if callback_data.action == "report":
         report_data = {
@@ -156,6 +171,12 @@ async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, st
         await callback.answer("Жалоба отправлена")
         
     user = await UserRepository.get_by_id(model_id=callback_data.target_id)
+    await UserRepository.update(model_id=user.id, claim_count=user.claim_count + 1)
+    
+    if user.claim_count == 4:
+        await ban_profile(user)
+        await bot.send_message(user.telegram_id, "Ваш профиль был забанен. Причина: " + callback_data.reason)
+        
     user_description = await get_profile_card(user.telegram_id)
             
     user_description_media = InputMediaPhoto(media=user_description['photo'], caption=user_description['description'])

@@ -4,12 +4,15 @@ import logging
 import asyncio
 
 from app.bot.data.uni_data import set_uni_data
+from app.bot.commands.cmd_list import private
 
 from app.core.config import settings
 
 # routers import
 from app.bot.handlers.start import start_router
 from app.bot.handlers.base import base_router
+from app.bot.commands.base import cmd_base_router
+from app.bot.handlers.premium.base import base_premium_router
 from app.bot.handlers.profile.base import base_profile_router
 from app.bot.handlers.profile.create import create_profile_router
 from app.bot.handlers.profile.delete import delete_profile_router
@@ -33,6 +36,7 @@ dp = Dispatcher()
 # Connect handlers
 dp.include_router(start_router)
 dp.include_router(base_profile_router)
+dp.include_router(cmd_base_router)
 dp.include_router(create_profile_router)
 dp.include_router(delete_profile_router)
 dp.include_router(base_project_router)
@@ -44,6 +48,7 @@ dp.include_router(base_request_router)
 dp.include_router(base_search_settings_router)
 dp.include_router(base_search_settings_profile_router)
 dp.include_router(base_search_settings_project_router)
+dp.include_router(base_premium_router)
 dp.include_router(base_admin_router)
 
 dp.include_router(base_router)
@@ -52,6 +57,7 @@ dp.include_router(base_router)
 async def main():
     await set_uni_data()
     await bot.delete_webhook(drop_pending_updates=True)
+    await bot.set_my_commands(private)
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     
 

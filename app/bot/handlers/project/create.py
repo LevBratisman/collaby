@@ -30,7 +30,16 @@ class CreateProject(StatesGroup):
 @create_project_router.message(StateFilter(None), F.text == "Опубликовать проект")
 async def post_project(message: Message, state: FSMContext):
     await state.update_data(is_updated=False)
+    
+    user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
+    projects = await ProjectRepository.get_all(user_id=user.id)
+    
+    if len(projects) == 3:
+        await message.answer("У вас уже есть максимальное количество проектов")
+        return
+        
     await state.set_state(CreateProject.name)
+    
     
     await message.answer("Введите название проекта", reply_markup=await get_keyboard("Отмена"))
     

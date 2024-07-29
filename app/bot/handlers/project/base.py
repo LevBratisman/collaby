@@ -24,6 +24,7 @@ async def my_projects(message: Message):
         await message.answer("У вас нет проектов", reply_markup=await get_keyboard("Опубликовать проект", "Назад"))
         return
     
+    
     media, keyboard = await get_project_kb(projects=projects, page=1)
     
     await message.answer('Ваши проекты', reply_markup=await get_keyboard("Опубликовать проект", "Назад"))

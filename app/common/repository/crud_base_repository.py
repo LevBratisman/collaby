@@ -47,6 +47,18 @@ class CRUDBase:
                 await session.commit()
                 
     @classmethod
+    async def delete_by(cls, **data):
+        async with async_session_maker() as session:
+            query = select(cls.model.__table__.columns).filter_by(**data)
+            result = await session.execute(query)
+            if not result:
+                raise Exception
+            else:
+                query = delete(cls.model).filter_by(**data)
+                await session.execute(query)
+                await session.commit()
+                
+    @classmethod
     async def update(cls, model_id: int, **data):
         async with async_session_maker() as session:
             query = select(cls.model.__table__.columns).filter(cls.model.id == model_id)
