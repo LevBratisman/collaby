@@ -11,7 +11,7 @@ uni_data = [
 
 async def set_uni_data():
     for uni in uni_data:
-        uni = await UniRepository.get_one_or_none(short_name=uni['short_name'])
+        existed_uni = await UniRepository.get_one_or_none(short_name=uni['short_name'])
         
-        if not uni:
+        if not existed_uni:
             await UniRepository.add(**uni)

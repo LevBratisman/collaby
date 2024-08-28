@@ -8,6 +8,8 @@ async def get_admin_keyboard():
     btns = [
         "Модерация пользователей",
         "Модерация проектов",
+        "Добавить бота",
+        "Добавить проект",
         "Статистика",
         "Назад"
     ]
@@ -17,7 +19,7 @@ async def get_admin_keyboard():
     for index, text in enumerate(btns, start=0):
             keyboard.add(KeyboardButton(text=text))
             
-    return keyboard.adjust(2, 1, 1).as_markup(
+    return keyboard.adjust(2, 2, 1, 1).as_markup(
         resize_keyboard=True,
         input_field_placeholder='Выберите действие'
     )

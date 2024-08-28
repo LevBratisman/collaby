@@ -22,6 +22,9 @@ from app.bot.handlers.search.project import search_project_router
 from app.bot.handlers.search.profile import search_profile_router
 from app.bot.handlers.invites import base_invite_router
 from app.bot.handlers.admin.base import base_admin_router
+from app.bot.handlers.admin.add_bot import admin_add_bot_router
+from app.bot.handlers.admin.add_project import admin_add_project_router
+from app.bot.handlers.admin.moderation import admin_moderation_router
 from app.bot.handlers.search_settings.base import base_search_settings_router
 from app.bot.handlers.requests import base_request_router
 from app.bot.handlers.search_settings.profile import base_search_settings_profile_router
@@ -50,6 +53,9 @@ dp.include_router(base_search_settings_profile_router)
 dp.include_router(base_search_settings_project_router)
 dp.include_router(base_premium_router)
 dp.include_router(base_admin_router)
+dp.include_router(admin_add_bot_router)
+dp.include_router(admin_add_project_router)
+dp.include_router(admin_moderation_router)
 
 dp.include_router(base_router)
 

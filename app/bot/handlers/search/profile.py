@@ -111,7 +111,8 @@ async def invite_user_to_project(callback: CallbackQuery, callback_data: InviteU
             
             await InviteRepository.add(**invite_data)
             target_user = await UserRepository.get_by_id(model_id=callback_data.target_user_id)
-            await bot.send_message(target_user.telegram_id, f"Кто-то пригласил вас в свой проект!")
+            if target_user.telegram_id > 10000:
+                await bot.send_message(target_user.telegram_id, f"Кто-то пригласил вас в свой проект!")
             await callback.answer("Приглашение отправлено")
             
         else:
@@ -175,7 +176,8 @@ async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, st
     
     if user.claim_count == 4:
         await ban_profile(user)
-        await bot.send_message(user.telegram_id, "Ваш профиль был забанен. Причина: " + callback_data.reason)
+        if user.telegram_id > 10000:
+            await bot.send_message(user.telegram_id, "Ваш профиль был забанен. Причина: " + callback_data.reason)
         
     user_description = await get_profile_card(user.telegram_id)
             
