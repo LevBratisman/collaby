@@ -1,7 +1,13 @@
+from contextlib import asynccontextmanager
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 import logging
 import asyncio
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from aiogram.types import Update
+import uvicorn
 
 from app.bot.data.uni_data import set_uni_data
 from app.bot.commands.cmd_list import private
@@ -29,6 +35,38 @@ from app.bot.handlers.search_settings.base import base_search_settings_router
 from app.bot.handlers.requests import base_request_router
 from app.bot.handlers.search_settings.profile import base_search_settings_profile_router
 from app.bot.handlers.search_settings.project import base_search_settings_project_router
+
+
+@asynccontextmanager
+async def lifespan(app):
+    logging.info("Starting bot")
+    await set_uni_data()
+    dp.shutdown.register(on_shutdown)
+    await bot.set_my_commands(private)
+    await bot.delete_webhook(drop_pending_updates=True)
+    yield
+    
+
+app = FastAPI(lifespan=lifespan)
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+    "http://localhost:5173",
+    "*"
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.api_route("/", methods=["GET", "POST"])
+async def webhook(update: dict):
+    telegram_update = Update(**update)
+    await dp.feed_update(bot=bot, update=telegram_update)
+    return 'get'
 
 
 # Initialize Bot and Dispatcher
@@ -60,6 +98,10 @@ dp.include_router(admin_moderation_router)
 dp.include_router(base_router)
 
 
+async def on_shutdown(bot):
+    logging.info("Shutting down bot")
+
+
 async def main():
     await set_uni_data()
     await bot.delete_webhook(drop_pending_updates=True)
@@ -69,9 +111,9 @@ async def main():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        print("error")
+    # try:
+    #     # uvicorn.run(app, host="127.0.0.1", port=80)
+    # except KeyboardInterrupt:
+    #     print("error")
 
 

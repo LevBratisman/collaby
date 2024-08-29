@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    container_name: collaby_db
+    restart: always
+    environment:
+      POSTGRES_DB: collabydb
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: botpassword
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  bot:
+    build: .
+    container_name: collaby_bot
+    restart: always
+    depends_on:
+      - db
+    env_file:
+      - .env
+    ports:
+      - "8002:8002"
+    volumes:
+      - .:/app
+    command: sh -c "poetry run alembic upgrade head && poetry run uvicorn app.run:app --reload --workers 1 --host 0.0.0.0 --port 8002"
+
+volumes:
+  pgdata:
