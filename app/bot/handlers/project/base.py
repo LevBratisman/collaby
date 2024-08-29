@@ -16,8 +16,9 @@ from app.bot.handlers.project.create import refill_project
 
 base_project_router = Router()
 
-@base_project_router.message(StateFilter(None), F.text == "👥Мои проекты")
-async def my_projects(message: Message):
+@base_project_router.message(StateFilter('*'), F.text == "👥Мои проекты")
+async def my_projects(message: Message, state: FSMContext):
+    await state.clear()
     
     user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
 

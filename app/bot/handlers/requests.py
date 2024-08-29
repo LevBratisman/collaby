@@ -13,9 +13,10 @@ from app.bot.utils.keyboard_processing import get_request_kb
 
 base_request_router = Router()
 
-@base_request_router.message(StateFilter(None), F.text.contains("🙋🏻‍♂️Заявки"))
-async def my_invites(message: Message):
-    
+@base_request_router.message(StateFilter('*'), F.text.contains("🙋🏻‍♂️Заявки"))
+async def my_invites(message: Message, state: FSMContext):
+    await state.clear()    
+
     user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
     requests = await RequestRepository.get_request_project_info(user_id=user.id)
     

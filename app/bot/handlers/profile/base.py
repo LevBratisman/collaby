@@ -13,9 +13,10 @@ from app.bot.utils.card_generator import get_profile_card
 
 base_profile_router = Router()
 
-@base_profile_router.message(F.text == "🎴Мой профиль")
-async def my_profile(message: Message):
-    
+@base_profile_router.message(StateFilter('*'), F.text == "🎴Мой профиль")
+async def my_profile(message: Message, state: FSMContext):
+    await state.clear()
+
     user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
     
     if user.is_banned:

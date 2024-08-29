@@ -16,8 +16,9 @@ from app.bot.keyboards.inline.card import get_search_settings_btns
 
 base_search_settings_router = Router()
 
-@base_search_settings_router.message(StateFilter(None), F.text.contains("⚙️Параметры поиска"))
-async def search_setting(message: Message):
+@base_search_settings_router.message(StateFilter('*'), F.text.contains("⚙️Параметры поиска"))
+async def search_setting(message: Message, state: FSMContext):
+    await state.clear()
     
     user_search_settings = await get_search_settings_card(telegram_id=message.from_user.id)
     
