@@ -18,6 +18,10 @@ async def my_profile(message: Message):
     
     user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
     
+    if user.is_banned:
+        await message.answer('Ваш профиль заблокирован')
+        return
+
     if not user.is_authorized:
         await message.answer(unfilled_profile_text, reply_markup=await get_keyboard('Заполнить анкету🚀', 'В другой раз'))
         return

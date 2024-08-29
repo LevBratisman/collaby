@@ -20,4 +20,4 @@ class RequestRepository(CRUDBase):
             )
             
             result = await session.execute(query)
-            return result.all()
+            return result.all()        

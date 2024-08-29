@@ -5,6 +5,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters import CommandStart, StateFilter, Command
 from random import randrange
 
+from app.bot.filters.admin import IsAdmin
 from app.common.repository.user_repository import UserRepository
 from app.common.repository.project_repository import ProjectRepository
 from app.common.repository.invite_repository import InviteRepository
@@ -20,7 +21,7 @@ from app.bot.handlers.admin.base import admin_panel
 from app.bot.keyboards.inline.topic import get_topic_btns
 
 admin_add_bot_router = Router()
-
+admin_add_bot_router.message.filter(IsAdmin())
 
 class CreateBot(StatesGroup):
     username = State()
@@ -44,8 +45,8 @@ async def reject(message: Message, state: FSMContext):
 @admin_add_bot_router.message(F.text=='Добавить бота')
 async def add_bot(message: Message, state: FSMContext):
     await state.set_state(CreateBot.uni_id)
-    await state.update_data(username='bot')
-    await state.update_data(telegram_id=randrange(1, 10000, 1))
+    await state.update_data(username=f'bot{randrange(1, 10000000, 1)}')
+    await state.update_data(telegram_id=randrange(1, 100000, 1))
     
     await message.answer("С какого вы университета?", reply_markup=await get_uni_btns())
 
@@ -102,6 +103,7 @@ async def set_image(message: Message, state: FSMContext):
     await state.update_data(is_authorized=True)
         
     bot_data = await state.get_data()
+    bot_data['is_bot'] = True
     await UserRepository.add(**bot_data)
     
     await message.answer("Вы успешно создали бота")

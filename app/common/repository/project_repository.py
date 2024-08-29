@@ -13,3 +13,11 @@ class ProjectRepository(CRUDBase):
             query = select(cls.model).filter_by(**filter_data).where(cls.model.user_id != user_id)
             result = await session.execute(query)
             return result.scalars().all()
+        
+
+    @classmethod
+    async def get_claims_projects(cls):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter(cls.model.claim_count>0, cls.model.is_banned==False)
+            result = await session.execute(query)
+            return result.scalars().all()

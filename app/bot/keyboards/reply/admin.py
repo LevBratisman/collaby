@@ -10,6 +10,8 @@ async def get_admin_keyboard():
         "Модерация проектов",
         "Добавить бота",
         "Добавить проект",
+        "Разблокировать пользователя",
+        "Просмотреть анкету пользователя",
         "Статистика",
         "Назад"
     ]
@@ -19,7 +21,7 @@ async def get_admin_keyboard():
     for index, text in enumerate(btns, start=0):
             keyboard.add(KeyboardButton(text=text))
             
-    return keyboard.adjust(2, 2, 1, 1).as_markup(
+    return keyboard.adjust(2, 2, 1, 1, 1, 1).as_markup(
         resize_keyboard=True,
         input_field_placeholder='Выберите действие'
     )

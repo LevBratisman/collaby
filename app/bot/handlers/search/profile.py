@@ -36,9 +36,10 @@ class ReportProfile(StatesGroup):
 
 search_profile_router = Router()
 
-@search_profile_router.message(StateFilter(None), F.text.in_(["Следующий", "🔍Искать людей"]))
-async def start_search_profile(message: Message):
-            
+@search_profile_router.message(StateFilter("*"), F.text.in_(["Следующий", "🔍Искать людей"]))
+async def start_search_profile(message: Message, state: FSMContext):
+        await state.clear()
+
         user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
         
         if user.is_banned:
@@ -111,7 +112,7 @@ async def invite_user_to_project(callback: CallbackQuery, callback_data: InviteU
             
             await InviteRepository.add(**invite_data)
             target_user = await UserRepository.get_by_id(model_id=callback_data.target_user_id)
-            if target_user.telegram_id > 10000:
+            if not target_user.is_bot:
                 await bot.send_message(target_user.telegram_id, f"Кто-то пригласил вас в свой проект!")
             await callback.answer("Приглашение отправлено")
             
@@ -174,9 +175,9 @@ async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, st
     user = await UserRepository.get_by_id(model_id=callback_data.target_id)
     await UserRepository.update(model_id=user.id, claim_count=user.claim_count + 1)
     
-    if user.claim_count == 4:
+    if user.claim_count == 10:
         await ban_profile(user)
-        if user.telegram_id > 10000:
+        if not user.is_bot:
             await bot.send_message(user.telegram_id, "Ваш профиль был забанен. Причина: " + callback_data.reason)
         
     user_description = await get_profile_card(user.telegram_id)

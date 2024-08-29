@@ -42,7 +42,7 @@ async def delete_invite(callback: CallbackQuery, callback_data: InviteCallBack, 
         invites = await InviteRepository.get_all(user_id=user.id)
         
         if not invites:
-            await callback.message.answer("У вас нет приглашений", reply_markup=await get_menu_keyboard(telegram_id=callback.message.from_user.id))
+            await callback.message.answer("У вас нет приглашений", reply_markup=await get_menu_keyboard(telegram_id=callback.from_user.id))
             await callback.message.delete()
             return
         

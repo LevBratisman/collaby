@@ -62,3 +62,23 @@ class UserRepository(CRUDBase):
             query = update(cls.model).where(cls.model.telegram_id == telegram_id).values(project_iter = value)
             await session.execute(query)
             await session.commit()
+
+
+    # BOTS
+
+    @classmethod
+    async def get_one_bot(cls):
+        async with async_session_maker() as session:
+            query = select(cls.model.__table__.columns).where(cls.model.is_bot==True).limit(1)
+            result = await session.execute(query)
+            return result.one_or_none()
+        
+
+    # Claims users
+
+    @classmethod
+    async def get_claims_users(cls):
+        async with async_session_maker() as session:
+            query = select(cls.model).filter(cls.model.claim_count>0, cls.model.is_banned==False, cls.model.is_authorized==True)
+            result = await session.execute(query)
+            return result.scalars().all()

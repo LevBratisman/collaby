@@ -31,9 +31,10 @@ class ReportProject(StatesGroup):
 
 search_project_router = Router()
 
-@search_project_router.message(StateFilter(None), F.text.in_(["Далее", "💡Искать проекты"]))
-async def start_search_project(message: Message):
-            
+@search_project_router.message(StateFilter("*"), F.text.in_(["Далее", "💡Искать проекты"]))
+async def start_search_project(message: Message, state: FSMContext):
+        await state.clear()   
+
         user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
         user_filter = await FilterRepository.get_filter_by_telegram_id(telegram_id=message.from_user.id)
         
@@ -68,7 +69,7 @@ async def start_search_project(message: Message):
             
 
 @search_project_router.callback_query(StateFilter(None), F.data.startswith('request_project_'))
-async def invite_user(callback: CallbackQuery, bot: Bot):
+async def request_project(callback: CallbackQuery, bot: Bot):
     target_project_id = int(callback.data.split('_')[-1])
     target_project = await ProjectRepository.get_by_id(model_id=target_project_id)
     
@@ -95,20 +96,22 @@ async def invite_user(callback: CallbackQuery, bot: Bot):
 
                     await RequestRepository.add(**request_data)
                     creator = await UserRepository.get_by_id(model_id=target_project.user_id)
-                    await bot.send_message(creator.telegram_id, f"Кто-то хочет вступить в проект {target_project.name}!")
+                    if not creator.is_bot:
+                        await bot.send_message(creator.telegram_id, f"Кто-то хочет вступить в проект {target_project.name}!")
                     await callback.answer("Заявка отправлена")
                     
         else:
             await callback.answer("Пожалуйста, заполните анкету")
     else:
         await callback.answer("Вы были забанены")
+
         
         
 # --------------------------------------- REPORT PROJECT ---------------------------------------
 
 
 @search_project_router.callback_query(StateFilter(None), F.data.startswith('report_project_'))
-async def invite_user(callback: CallbackQuery, state: FSMContext):
+async def report_project(callback: CallbackQuery, state: FSMContext):
     target_project_id = int(callback.data.split('_')[-1])
     target_project = await ProjectRepository.get_by_id(model_id=target_project_id)
     
@@ -162,9 +165,9 @@ async def report_user(callback: CallbackQuery, callback_data: ReportCallBack, st
     if callback_data.action == "cancel":
         await callback.answer()
         
-    if project.claim_count == 4:
+    if project.claim_count == 10:
         await ban_project(project)
-        await bot.send_message(user.telegram_id, f"Ваш проект {project.name} был забанен. Причина: {callback_data.reason}")
-        await ProjectRepository.delete(model_id=project.id)
+        if not user.is_bot:
+            await bot.send_message(user.telegram_id, f"Ваш проект {project.name} был забанен. Причина: {callback_data.reason}")
     
     await state.clear()

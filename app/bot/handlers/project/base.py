@@ -6,6 +6,9 @@ from aiogram.filters import CommandStart, StateFilter
 from app.common.repository.user_repository import UserRepository
 from app.common.repository.project_repository import ProjectRepository
 from app.bot.keyboards.inline.pagination import ProjectCallBack
+from app.common.repository.request_repository import RequestRepository
+from app.common.repository.report_repository import ReportRepository
+from app.common.repository.invite_repository import InviteRepository
 from app.bot.keyboards.reply.base import get_keyboard
 from app.bot.keyboards.reply.menu import get_menu_keyboard
 from app.bot.utils.keyboard_processing import get_project_kb
@@ -17,6 +20,10 @@ base_project_router = Router()
 async def my_projects(message: Message):
     
     user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
+
+    if user.is_banned:
+        await message.answer('Ваш профиль заблокирован')
+        return
     
     projects = await ProjectRepository.get_all(user_id=user.id)
     
@@ -36,6 +43,9 @@ async def my_projects(message: Message):
 async def delete_project(callback: CallbackQuery, callback_data: ProjectCallBack, state: FSMContext):  
     print(callback.data)
     if callback_data.action == "delete":
+        await ReportRepository.delete_by(project_id=callback_data.project_id)
+        await RequestRepository.delete_by(project_id=callback_data.project_id)
+        await InviteRepository.delete_by(project_id=callback_data.project_id)
         await ProjectRepository.delete(model_id=callback_data.project_id)
         await callback.answer("Проект удален")
         
@@ -70,5 +80,6 @@ async def delete_project(callback: CallbackQuery, callback_data: ProjectCallBack
     
     
 @base_project_router.message(F.text == "Назад")
-async def reject(message: Message):
+async def reject(message: Message, state: FSMContext):
+    await state.clear()
     await message.answer("Вы вернулись в главное меню", reply_markup=await get_menu_keyboard(telegram_id=message.from_user.id))

@@ -17,7 +17,6 @@ base_request_router = Router()
 async def my_invites(message: Message):
     
     user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
-    
     requests = await RequestRepository.get_request_project_info(user_id=user.id)
     
     if not requests:

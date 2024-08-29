@@ -53,6 +53,13 @@ async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext
     user_search_settings = await get_search_settings_card(telegram_id=callback.from_user.id)
         
     await callback.message.edit_text(user_search_settings['description'], reply_markup=await get_search_settings_btns(telegram_id=callback.from_user.id))
+
+    await callback.answer('Настройки изменены')
+
+@base_search_settings_profile_router.message(StateFilter(EditSearchSettingsProfileUni.uni))
+async def edit_search_setting_profile(message: Message, state: FSMContext):
+    await message.answer("Выберите из предложенных вариантов", reply_markup=await get_uni_btns())
+    
     
     
     
@@ -71,14 +78,15 @@ async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext
 
 @base_search_settings_profile_router.callback_query(StateFilter(EditSearchSettingsProfileTopic.topic), F.data)
 async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext):
-    await callback.answer(callback.data)
     data = await state.get_data()
     
     filter = await FilterRepository.get_one_or_none(user_id=data['user_id'])
     
     if callback.data == "reset_topic_profile_search_settings":
         topic = None
+        await callback.answer('Настройки сброшены')
     else:
+        await callback.answer(callback.data)
         topic = callback.data
         
     await FilterRepository.update(model_id=filter.id, profile_topic=topic)
@@ -86,3 +94,9 @@ async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext
     
     user_search_settings = await get_search_settings_card(telegram_id=callback.from_user.id)
     await callback.message.edit_text(user_search_settings['description'], reply_markup=await get_search_settings_btns(telegram_id=callback.from_user.id))
+
+
+@base_search_settings_profile_router.message(StateFilter(EditSearchSettingsProfileTopic.topic))
+async def edit_search_setting_profile(message: Message, state: FSMContext):
+    await message.answer("Выберите из предложенных вариантов", reply_markup=await get_topic_btns_for_search_settings())
+    

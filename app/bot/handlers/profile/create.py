@@ -22,6 +22,11 @@ class CreateProfile(StatesGroup):
     is_authorized = State()
 
 
+@create_profile_router.message(StateFilter(CreateProfile), F.text == "Отмена")
+async def reject(message: Message, state: FSMContext):
+    await state.clear()
+    await my_profile(message)
+
 
 @create_profile_router.message(StateFilter(None), F.text == "Заполнить анкету🚀")
 async def fill_profile(message: Message, state: FSMContext):
@@ -35,13 +40,8 @@ async def refill_profile(callback: CallbackQuery, state: FSMContext):
     await callback.answer('Заполнение анкеты')
     
     await callback.message.answer("Как вас зовут?", reply_markup=await get_keyboard("Отмена"))
-    
-    
-@create_profile_router.message(StateFilter(CreateProfile), F.text == "Отмена")
-async def reject(message: Message, state: FSMContext):
-    await state.clear()
-    await my_profile(message)
-    
+
+
     
 @create_profile_router.message(StateFilter(CreateProfile.name), F.text)
 async def set_name(message: Message, state: FSMContext):
@@ -49,7 +49,12 @@ async def set_name(message: Message, state: FSMContext):
     await state.set_state(CreateProfile.topic)
     
     await message.answer("В какой сфере вы развиваетесь?", reply_markup=await get_topic_btns())
-    
+
+@create_profile_router.message(StateFilter(CreateProfile.name))
+async def set_name(message: Message, state: FSMContext):    
+    await message.answer("Введите ваше имя (текст)")
+
+
     
 @create_profile_router.callback_query(StateFilter(CreateProfile.topic), F.data)
 async def set_topic(callback: CallbackQuery, state: FSMContext):
@@ -58,15 +63,25 @@ async def set_topic(callback: CallbackQuery, state: FSMContext):
     await callback.answer(callback.data)
     
     await callback.message.edit_text("Напишите немного о себе")
+
+@create_profile_router.message(StateFilter(CreateProfile.topic))
+async def set_topic(message: Message, state: FSMContext):    
+    await message.answer("Используйте предложенные варианты", reply_markup=await get_topic_btns())
     
     
+
 @create_profile_router.message(StateFilter(CreateProfile.info), F.text)
 async def set_info(message: Message, state: FSMContext):
     await state.update_data(info=message.text)
     await state.set_state(CreateProfile.skills)
     
     await message.answer("Почти финиш! Перечислите ваши навыки")
+
+@create_profile_router.message(StateFilter(CreateProfile.info))
+async def set_info(message: Message, state: FSMContext):    
+    await message.answer("Напишите о себе (Введите текст)")  
     
+
     
 @create_profile_router.message(StateFilter(CreateProfile.skills), F.text)
 async def set_skills(message: Message, state: FSMContext):
@@ -74,6 +89,11 @@ async def set_skills(message: Message, state: FSMContext):
     await state.set_state(CreateProfile.image)
     
     await message.answer("Отправьте свою фотографию")
+
+@create_profile_router.message(StateFilter(CreateProfile.skills))
+async def set_skills(message: Message, state: FSMContext):    
+    await message.answer("Перечислите ваши навыки (Введите текст)")
+
     
 
 @create_profile_router.message(StateFilter(CreateProfile.image), F.photo)
@@ -90,6 +110,11 @@ async def set_image(message: Message, state: FSMContext):
     
     await state.clear()
     await my_profile(message)
+
+
+@create_profile_router.message(StateFilter(CreateProfile.image))
+async def set_image(message: Message, state: FSMContext):
+    await message.answer('Загрузите изображение')
     
     
     

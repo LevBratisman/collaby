@@ -20,6 +20,7 @@ class User(Base, CreatedModel, UpdatedModel):
     is_banned: Mapped[bool] = mapped_column(default=False)
     is_authorized: Mapped[bool] = mapped_column(default=False)
     is_premium: Mapped[bool] = mapped_column(default=False)
+    is_bot: Mapped[bool] = mapped_column(default=False)
     
     person_iter: Mapped[int] = mapped_column(default=0)
     project_iter: Mapped[int] = mapped_column(default=0)

@@ -29,7 +29,7 @@ class EditSearchSettingsProjectTopic(StatesGroup):
 # ---------------------------------------------- UNI ----------------------------------------------
 
 @base_search_settings_project_router.callback_query(StateFilter(None), F.data.contains("edit_filter_project_uni"))
-async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext):
+async def edit_search_setting_project(callback: CallbackQuery, state: FSMContext):
     
     await state.update_data(user_id=int(callback.data.split('_')[-1]))
     
@@ -40,7 +40,7 @@ async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext
     
 
 @base_search_settings_project_router.callback_query(StateFilter(EditSearchSettingsProjectUni.uni), F.data)
-async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext):
+async def edit_search_setting_project(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     data = await state.get_data()
     
@@ -53,13 +53,18 @@ async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext
     user_search_settings = await get_search_settings_card(telegram_id=callback.from_user.id)
         
     await callback.message.edit_text(user_search_settings['description'], reply_markup=await get_search_settings_btns(telegram_id=callback.from_user.id))
+
+
+@base_search_settings_project_router.message(StateFilter(EditSearchSettingsProjectUni.uni))
+async def edit_search_setting_project(message: Message, state: FSMContext):
+    await message.answer("Выберите из предложенных вариантов", reply_markup=await get_uni_btns())
     
     
     
 # ---------------------------------------------- TOPIC ----------------------------------------------
 
 @base_search_settings_project_router.callback_query(StateFilter(None), F.data.contains("edit_filter_project_topic"))
-async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext):
+async def edit_search_setting_project(callback: CallbackQuery, state: FSMContext):
     
     await state.update_data(user_id=int(callback.data.split('_')[-1]))
     
@@ -70,19 +75,26 @@ async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext
     
 
 @base_search_settings_project_router.callback_query(StateFilter(EditSearchSettingsProjectTopic.topic), F.data)
-async def edit_search_setting_profile(callback: CallbackQuery, state: FSMContext):
-    await callback.answer(callback.data)
+async def edit_search_setting_project(callback: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     
     filter = await FilterRepository.get_one_or_none(user_id=data['user_id'])
     
     if callback.data == "reset_topic_profile_search_settings":
         topic = None
+        await callback.answer('Настройки сброшены')
     else:
         topic = callback.data
+        await callback.answer(callback.data)
+
         
     await FilterRepository.update(model_id=filter.id, project_topic=topic)
     await state.clear()
     
     user_search_settings = await get_search_settings_card(telegram_id=callback.from_user.id)
     await callback.message.edit_text(user_search_settings['description'], reply_markup=await get_search_settings_btns(telegram_id=callback.from_user.id))
+
+
+@base_search_settings_project_router.message(StateFilter(EditSearchSettingsProjectTopic.topic))
+async def edit_search_setting_project(message: Message, state: FSMContext):
+    await message.answer("Выберите из предложенных вариантов", reply_markup=await get_topic_btns_for_search_settings())

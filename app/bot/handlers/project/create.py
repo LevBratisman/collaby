@@ -11,6 +11,7 @@ from app.bot.keyboards.inline.pagination import ProjectCallBack
 from app.bot.keyboards.reply.base import get_keyboard
 from app.bot.keyboards.reply.menu import get_menu_keyboard
 from app.bot.keyboards.inline.topic import get_topic_btns
+from app.core.config import settings
 
 create_project_router = Router()
 
@@ -27,6 +28,12 @@ class CreateProject(StatesGroup):
     project_id = State()
 
 
+@create_project_router.message(StateFilter(CreateProject), F.text == "Отмена")
+async def reject(message: Message, state: FSMContext):
+    await state.clear()
+    await my_projects(message)
+
+
 @create_project_router.message(StateFilter(None), F.text == "Опубликовать проект")
 async def post_project(message: Message, state: FSMContext):
     await state.update_data(is_updated=False)
@@ -34,15 +41,15 @@ async def post_project(message: Message, state: FSMContext):
     user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
     projects = await ProjectRepository.get_all(user_id=user.id)
     
-    if len(projects) == 3:
+    if len(projects) == 1 and message.from_user.id != settings.ADMIN_ID:
         await message.answer("У вас уже есть максимальное количество проектов")
         return
         
     await state.set_state(CreateProject.name)
     
-    
     await message.answer("Введите название проекта", reply_markup=await get_keyboard("Отмена"))
     
+
 @create_project_router.callback_query(StateFilter(None), F.data.contains("project_refill"))
 async def refill_project(callback: CallbackQuery, state: FSMContext):
     print(callback.data)
@@ -55,11 +62,6 @@ async def refill_project(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer("Введите название проекта", reply_markup=await get_keyboard("Отмена"))
     
     
-@create_project_router.message(StateFilter(CreateProject), F.text == "Отмена")
-async def reject(message: Message, state: FSMContext):
-    await state.clear()
-    await my_projects(message)
-    
     
 @create_project_router.message(StateFilter(CreateProject.name), F.text)
 async def set_name(message: Message, state: FSMContext):
@@ -67,7 +69,12 @@ async def set_name(message: Message, state: FSMContext):
     await state.set_state(CreateProject.topic)
     
     await message.answer("Из какой сферы ваш проект?", reply_markup=await get_topic_btns())
+
+@create_project_router.message(StateFilter(CreateProject.name))
+async def set_name(message: Message, state: FSMContext):
+    await message.answer("Введите название проекта (Используйте текст)")
     
+
     
 @create_project_router.callback_query(StateFilter(CreateProject.topic), F.data)
 async def set_topic(callback: CallbackQuery, state: FSMContext):
@@ -76,6 +83,11 @@ async def set_topic(callback: CallbackQuery, state: FSMContext):
     await callback.answer(callback.data)
     
     await callback.message.edit_text("Расскажите немного о своем проекте")
+
+@create_project_router.message(StateFilter(CreateProject.topic))
+async def set_topic(message: Message, state: FSMContext):
+    await message.answer("Выберите из предложенных вариантов", reply_markup=await get_topic_btns())
+
     
     
 @create_project_router.message(StateFilter(CreateProject.info), F.text)
@@ -84,6 +96,11 @@ async def set_info(message: Message, state: FSMContext):
     await state.set_state(CreateProject.requirements)
     
     await message.answer("Почти финиш! Расскажите о требованиях к участникам")
+
+@create_project_router.message(StateFilter(CreateProject.info))
+async def set_info(message: Message, state: FSMContext):
+    await message.answer("Расскажите о проекте (Используйте текст)")
+
     
     
 @create_project_router.message(StateFilter(CreateProject.requirements), F.text)
@@ -92,7 +109,12 @@ async def set_skills(message: Message, state: FSMContext):
     await state.set_state(CreateProject.image)
     
     await message.answer("Отправьте фотографию")
+
+@create_project_router.message(StateFilter(CreateProject.requirements))
+async def set_skills(message: Message, state: FSMContext):
+    await message.answer("Почти финиш! Расскажите о требованиях к участникам (Используйте текст)")
     
+
 
 @create_project_router.message(StateFilter(CreateProject.image), F.photo)
 async def set_image(message: Message, state: FSMContext):
@@ -119,6 +141,11 @@ async def set_image(message: Message, state: FSMContext):
     await state.clear()
     
     await my_projects(message)
+
+@create_project_router.message(StateFilter(CreateProject.image))
+async def set_image(message: Message, state: FSMContext):
+    await message.answer('Загрузите изображение')
+
     
 
 @create_project_router.message(StateFilter(None), F.text == "Мои проекты")
