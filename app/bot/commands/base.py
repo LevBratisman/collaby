@@ -28,13 +28,13 @@ async def cmd_menu(message: Message, state: FSMContext):
 @cmd_base_router.message(Command("people"))
 async def cmd_search_profile(message: Message, state: FSMContext):
     await state.clear()
-    await start_search_profile(message)
+    await start_search_profile(message, state)
     
     
 @cmd_base_router.message(Command("projects"))
 async def cmd_search_project(message: Message, state: FSMContext):
     await state.clear()
-    await start_search_project(message)
+    await start_search_project(message, state)
     
     
 @cmd_base_router.message(Command("help"))
