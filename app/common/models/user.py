@@ -12,6 +12,7 @@ class User(Base, CreatedModel, UpdatedModel):
     name: Mapped[str] = mapped_column(String(30), nullable=True)
     info: Mapped[str] = mapped_column(String(700), nullable=True)
     skills: Mapped[str] = mapped_column(String(700), nullable=True)
+    image: Mapped[str] = mapped_column(nullable=True)
     topic: Mapped[str] = mapped_column(String(30), index=True, nullable=True)
     uni_id: Mapped[int] = mapped_column(ForeignKey("uni.id"))
     claim_count: Mapped[int] = mapped_column(default=0)
@@ -19,9 +20,10 @@ class User(Base, CreatedModel, UpdatedModel):
     is_banned: Mapped[bool] = mapped_column(default=False)
     is_authorized: Mapped[bool] = mapped_column(default=False)
     is_premium: Mapped[bool] = mapped_column(default=False)
+    is_bot: Mapped[bool] = mapped_column(default=False)
     
     person_iter: Mapped[int] = mapped_column(default=0)
     project_iter: Mapped[int] = mapped_column(default=0)
     
-    uni = relationship("Uni", backref="users")
+    uni: Mapped["Uni"] = relationship(back_populates="users")
     

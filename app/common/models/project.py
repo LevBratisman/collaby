@@ -12,6 +12,7 @@ class Project(Base, CreatedModel, UpdatedModel):
     name: Mapped[str] = mapped_column(String(30))
     info: Mapped[str] = mapped_column(String(1000))
     requirements: Mapped[str] = mapped_column(String(1000))
+    image: Mapped[str] = mapped_column(nullable=True)
     topic: Mapped[str] = mapped_column(String(30), index=True)
     claim_count: Mapped[int] = mapped_column(default=0)
     
