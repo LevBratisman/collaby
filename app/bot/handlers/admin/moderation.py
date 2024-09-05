@@ -38,9 +38,9 @@ async def start_search_claims_users(message: Message):
         user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
             
         target_users = await UserRepository.get_claims_users()
-        print(target_users)
+
         if target_users:
-            iter = 0
+            iter = user.person_iter
             await message.answer("🔍", reply_markup=await get_keyboard("обратно", "след"))
             try:
                 await UserRepository.set_person_iterator(message.from_user.id, iter + 1)
@@ -90,9 +90,9 @@ async def start_search_claims_projects(message: Message):
         user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
             
         target_projects = await ProjectRepository.get_claims_projects()
-        print(target_projects)
+
         if target_projects:
-            iter = 0
+            iter = user.project_iter
             await message.answer("🔍", reply_markup=await get_keyboard("обратно", "->"))
             try:
                 await UserRepository.set_project_iterator(message.from_user.id, iter + 1)
