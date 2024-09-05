@@ -138,9 +138,8 @@ async def set_image(message: Message, state: FSMContext):
         await ProjectRepository.add(**project_data)
     
     await message.answer("Вы успешно опубликовали проект", reply_markup=await get_keyboard("Опубликовать проект", "Назад"))
-    await state.clear()
     
-    await my_projects(message)
+    await my_projects(message, state)
 
 @create_project_router.message(StateFilter(CreateProject.image))
 async def set_image(message: Message, state: FSMContext):
@@ -149,7 +148,8 @@ async def set_image(message: Message, state: FSMContext):
     
 
 @create_project_router.message(StateFilter(None), F.text == "Мои проекты")
-async def my_projects(message: Message):
+async def my_projects(message: Message, state: FSMContext):
+    await state.clear()
     user = await UserRepository.get_by_telegram_id(telegram_id=message.from_user.id)
     projects = await ProjectRepository.get_all(user_id=user.id)
     
