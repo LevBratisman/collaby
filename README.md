@@ -15,7 +15,8 @@ COLLABY - СЕРВИС ДЛЯ КОЛЛАБОРАЦИИ СТУДЕНТОВ И С�
 TEХНОЛОГИИ
 
 Python 3.12 /
-Aiogram /
+FastAPI / 
+Aiogram3 /
 PostgreSQL /
 Sqlalchemy /
 Alembic /
