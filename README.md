@@ -23,13 +23,13 @@ COLLABY - СЕРВИС ДЛЯ КОЛЛАБОРАЦИИ СТУДЕНТОВ И С�
 
 TEХНОЛОГИИ
 
-Python 3.12 /
-FastAPI / 
-Aiogram3 /
-PostgreSQL /
-Sqlalchemy /
-Alembic /
-Docker (Docker-compose)
+- Python 3.12
+- FastAPI
+- Aiogram3
+- PostgreSQL
+- Sqlalchemy
+- Alembic
+- Docker (Docker-compose)
 
 
 ПЛАНЫ НА БУДУЩЕЕ
