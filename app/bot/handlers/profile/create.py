@@ -108,8 +108,7 @@ async def set_image(message: Message, state: FSMContext):
     
     await message.answer("Вы успешно заполнили анкету", reply_markup=await get_menu_keyboard(telegram_id=message.from_user.id))
     
-    await state.clear()
-    await my_profile(message)
+    await my_profile(message, state)
 
 
 @create_profile_router.message(StateFilter(CreateProfile.image))
