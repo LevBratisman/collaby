@@ -40,5 +40,8 @@ Docker (Docker-compose)
 4) Подключить сторонний ресурс для более глубокой аналитики
 
 
+ССЫЛКИ
 
+- Бот (Telegram) - @collaby_bot
+- Через WEB - https://web.telegram.org/k/#@collaby_bot
 
